@@ -1,0 +1,71 @@
+import nltk
+import string
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report
+
+# Download stopwords (only the first time)
+nltk.download('stopwords')
+
+#------------------------------------------
+#Dataset example
+#------------------------------------------
+texts = [
+    "I'm having a lot of fun learning Machine Learning",
+    "Sometimes it can be confusing, but it's worth it",
+    "I'd like to dedicate myself to this",
+    "I don't know what else to write"
+]
+
+labels = [1, 0, 1, 0]
+# 1 = Positive, 0 = Negative
+
+#------------------------------------------
+# Cleaning function
+#------------------------------------------
+def clean_text(text):
+    text = text.lower()
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text
+
+texts = [clean_text(t) for t in texts]
+
+#------------------------------------------
+# Data Splitting
+#------------------------------------------
+def new_func(texts, labels): X_train, X_test, y_train, y_test = train_test_split(texts, labels, test_size=0.2, random_state=42); return X_train,X_test,y_train,y_test
+
+X_train, X_test, y_train, y_test = new_func(texts, labels)
+
+#------------------------------------------
+# Pipeline NLP + ML
+#------------------------------------------
+pipeline = Pipeline([
+    ('tfidf', TfidfVectorizer(
+        stop_words=stopwords.words('english'),
+        ngram_range=(1, 2)
+    )),
+    ("model", LogisticRegression())
+])
+
+#------------------------------------------
+# Model Training
+#------------------------------------------
+pipeline.fit(X_train, y_train)
+
+#------------------------------------------
+# Model Evaluation
+#------------------------------------------
+y_pred = pipeline.predict(X_test)
+print(classification_report(y_test, y_pred))
+
+#------------------------------------------
+# New Prediction
+#------------------------------------------
+new_text = ["This is the fist time"]
+prediction = pipeline.predict(new_text)
+
+print("Prediction:", "Positive" if prediction[0] == 1 else "Negative")
